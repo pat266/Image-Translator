@@ -20,6 +20,10 @@ namespace EmguCV_TextDetection
         public Form1()
         {
             InitializeComponent();
+            // set true, otherwise key press is swallowed by the control that has focus
+            this.KeyPreview = true;
+            // add KeyEvent to the form
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(KeyEvent);
 
             leftPicture = new PictureBox();
             rightPicture = new PictureBox();
@@ -43,18 +47,55 @@ namespace EmguCV_TextDetection
             if (file.ShowDialog() == DialogResult.OK)
             {
                 leftPicture.Image = null; // delete the old image
+                rightPicture.Image = null; // delete the old image
                 System.GC.Collect();
-                Bitmap bm = new Bitmap(file.FileName);
-                leftPicture.Image = bm; // set to the new image
-                _ = DetectText(bm.ToImage<Bgr, byte>());
+                leftPicture.Image = new Bitmap(file.FileName); // set to the new image
+                
+                // enable the options in the MenuStrip
+                detectTextToolStripMenuItem.Enabled = true;
+                translateTextToolStripMenuItem.Enabled = true;
             }
         }
 
+        private void detectTextToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Bitmap bm = (Bitmap) (leftPicture.Image);
+            DrawBoundingRectangles(bm.ToImage<Bgr, byte>());
+        }
+
         /**
-         * Detect text in the image and draw Bounding Rectangles around it.
+         * Method to handle various methods from pressing down the key
+         */
+        private void KeyEvent(object sender, KeyEventArgs e) //Keyup Event 
+        {
+            if (e.KeyCode == Keys.F8)
+            {
+                // detect the text when press F8
+                if (detectTextToolStripMenuItem.Enabled)
+                {
+                    Bitmap bm = (Bitmap)(leftPicture.Image);
+                    DrawBoundingRectangles(bm.ToImage<Bgr, byte>());
+                }
+            }
+            if (e.KeyCode == Keys.F9)
+            {
+                // translate the text when press F9
+                if (translateTextToolStripMenuItem.Enabled)
+                {
+                    Bitmap bitmap = (Bitmap)(leftPicture.Image);
+                    TranslateText(bitmap.ToImage<Bgr, byte>());
+                }
+            }
+
+        }
+
+        
+        /**
+         * Algorithm taken from https://www.youtube.com/watch?v=KHes5M7zpGg
+         * Detect text in the image and get Bounding Rectangles around it.
          * Return: a list of rectangles (can get (X, Y), width, and height)
          */
-        private List<Rectangle> DetectText(Image<Bgr, byte> img)
+        private List<Rectangle> GetBoudingRectangles(Image<Bgr, byte> img)
         {
             /*
              1. Edge detection (sobel)
@@ -85,33 +126,56 @@ namespace EmguCV_TextDetection
                 brect.Height += value;
 
                 double ar = brect.Width / brect.Height;
-                if (ar > 2 && brect.Width > 25 && brect.Height > 8 && brect.Height < 100)
+                if (ar > 2 && brect.Width > 10 && brect.Height > 10 && brect.Height < 30)
                 {
                     list.Add(brect);
                 }
             }
 
-
-            Image<Bgr, byte> imgout = img.CopyBlank();
+            return list; // return the list of Rectangles
+        }
+        /**
+         * Algorithm taken from https://www.youtube.com/watch?v=KHes5M7zpGg
+         * Detect text in the image and draw Bounding Rectangles around it.
+         */
+        private void DrawBoundingRectangles(Image<Bgr, byte> img)
+        {
+            List<Rectangle> list = GetBoudingRectangles(img);
+            // draw the rectangles
             foreach (var r in list)
             {
                 CvInvoke.Rectangle(img, r, new MCvScalar(0, 0, 255), 2);
-                CvInvoke.Rectangle(imgout, r, new MCvScalar(0, 255, 255), -1);
             }
-            imgout._And(img);
-
-            // make it transparent
-            leftPicture.Image = null; // delete the old image
-            System.GC.Collect();
-            leftPicture.Image = img.ToBitmap();
-            Bitmap bmOut = imgout.ToBitmap();
-            bmOut.MakeTransparent();
 
             rightPicture.Image = null; // delete the old image
             System.GC.Collect();
-            rightPicture.Image = bmOut;
+            rightPicture.Image = img.ToBitmap();
+        }
 
-            return list; // return the list of Rectangles
+        /**
+         * 
+         */
+        private void translateTextToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Bitmap bitmap = (Bitmap)(leftPicture.Image);
+            TranslateText(bitmap.ToImage<Bgr, byte>());
+        }
+
+        /**
+         * Detect text in the image and draw Bounding Rectangles around it.
+         */
+        private void TranslateText(Image<Bgr, byte> img)
+        {
+            List<Rectangle> list = GetBoudingRectangles(img);
+            // draw the rectangles
+            foreach (var r in list)
+            {
+                CvInvoke.Rectangle(img, r, new MCvScalar(0, 255, 255), -1);
+            }
+
+            rightPicture.Image = null; // delete the old image
+            System.GC.Collect();
+            rightPicture.Image = img.ToBitmap();
         }
     }
 }

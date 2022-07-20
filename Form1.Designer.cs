@@ -33,6 +33,7 @@
             this.openImageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.detectTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.translateTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -57,7 +58,8 @@
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openImageToolStripMenuItem,
             this.toolStripSeparator1,
-            this.detectTextToolStripMenuItem});
+            this.detectTextToolStripMenuItem,
+            this.translateTextToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 22);
             this.fileToolStripMenuItem.Text = "File";
@@ -66,7 +68,7 @@
             // 
             this.openImageToolStripMenuItem.Name = "openImageToolStripMenuItem";
             this.openImageToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.openImageToolStripMenuItem.Text = "Translate Image";
+            this.openImageToolStripMenuItem.Text = "Pick Image";
             this.openImageToolStripMenuItem.Click += new System.EventHandler(this.openImageToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
@@ -79,7 +81,16 @@
             this.detectTextToolStripMenuItem.Enabled = false;
             this.detectTextToolStripMenuItem.Name = "detectTextToolStripMenuItem";
             this.detectTextToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.detectTextToolStripMenuItem.Text = "Detect Text";
+            this.detectTextToolStripMenuItem.Text = "Detect Text (F8)";
+            this.detectTextToolStripMenuItem.Click += new System.EventHandler(this.detectTextToolStripMenuItem_Click);
+            // 
+            // translateTextToolStripMenuItem
+            // 
+            this.translateTextToolStripMenuItem.Enabled = false;
+            this.translateTextToolStripMenuItem.Name = "translateTextToolStripMenuItem";
+            this.translateTextToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.translateTextToolStripMenuItem.Text = "Translate Text (F9)";
+            this.translateTextToolStripMenuItem.Click += new System.EventHandler(this.translateTextToolStripMenuItem_Click);
             // 
             // flowLayoutPanel1
             // 
@@ -120,6 +131,7 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip1);
             this.Name = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form1";
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
@@ -138,6 +150,7 @@
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
         private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.ToolStripMenuItem translateTextToolStripMenuItem;
     }
 }
 
