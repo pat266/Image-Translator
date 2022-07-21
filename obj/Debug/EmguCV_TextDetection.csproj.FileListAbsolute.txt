@@ -32,3 +32,6 @@ C:\Users\nili266\Desktop\GitHub\translator\EmguCV_TextDetection\bin\Debug\x86\ms
 C:\Users\nili266\Desktop\GitHub\translator\EmguCV_TextDetection\bin\Debug\x86\msvcp140_codecvt_ids.dll
 C:\Users\nili266\Desktop\GitHub\translator\EmguCV_TextDetection\bin\Debug\x86\opencv_videoio_ffmpeg440.dll
 C:\Users\nili266\Desktop\GitHub\translator\EmguCV_TextDetection\bin\Debug\x86\vcruntime140.dll
+C:\Users\nili266\Desktop\GitHub\translator\EmguCV_TextDetection\bin\Debug\OcrData\Chinese.ocrdata
+C:\Users\nili266\Desktop\GitHub\translator\EmguCV_TextDetection\bin\Debug\IronOcr.dll
+C:\Users\nili266\Desktop\GitHub\translator\EmguCV_TextDetection\bin\Debug\IronOcr.xml

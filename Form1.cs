@@ -11,12 +11,16 @@ using System.Windows.Forms;
 using Emgu.CV;
 using Emgu.CV.Structure;
 
+using IronOcr;
+
 namespace EmguCV_TextDetection
 {
     public partial class Form1 : Form
     {
         private PictureBox leftPicture, rightPicture;
         private OpenFileDialog file;
+
+        IronTesseract Ocr;
         public Form1()
         {
             InitializeComponent();
@@ -30,12 +34,27 @@ namespace EmguCV_TextDetection
 
             leftPicture.SizeMode = PictureBoxSizeMode.AutoSize;
             rightPicture.SizeMode = PictureBoxSizeMode.AutoSize;
-            
+
             flowLayoutPanel1.AutoScroll = true;
             flowLayoutPanel2.AutoScroll = true;
-            
+
             flowLayoutPanel1.Controls.Add(leftPicture);
             flowLayoutPanel2.Controls.Add(rightPicture);
+
+            // initialize for IronOCR
+            Ocr = new IronTesseract();
+
+            // improve speed
+            Ocr.Language = OcrLanguage.ChineseSimplifiedFast;
+            // Latest Engine 
+            Ocr.Configuration.TesseractVersion = TesseractVersion.Tesseract5;
+            //AI OCR only without font analysis
+            Ocr.Configuration.EngineMode = TesseractEngineMode.LstmOnly;
+            //Turn off unneeded options
+            Ocr.Configuration.ReadBarCodes = false;
+            Ocr.Configuration.RenderSearchablePdfsAndHocr = false;
+            // Assume text is laid out neatly in an orthagonal document
+            Ocr.Configuration.PageSegmentationMode = TesseractPageSegmentationMode.Auto;
         }
 
         private void openImageToolStripMenuItem_Click(object sender, EventArgs e)
@@ -50,23 +69,23 @@ namespace EmguCV_TextDetection
                 rightPicture.Image = null; // delete the old image
                 System.GC.Collect();
                 leftPicture.Image = new Bitmap(file.FileName); // set to the new image
-                
+
                 // enable the options in the MenuStrip
                 detectTextToolStripMenuItem.Enabled = true;
                 translateTextToolStripMenuItem.Enabled = true;
             }
         }
 
-        private void detectTextToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void detectTextToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Bitmap bm = (Bitmap) (leftPicture.Image);
-            DrawBoundingRectangles(bm.ToImage<Bgr, byte>());
+            Bitmap bm = (Bitmap)(leftPicture.Image);
+            await DrawBoundingRectangles_Async(bm.ToImage<Bgr, byte>());
         }
 
         /**
          * Method to handle various methods from pressing down the key
          */
-        private void KeyEvent(object sender, KeyEventArgs e) //Keyup Event 
+        private async void KeyEvent(object sender, KeyEventArgs e) //Keyup Event 
         {
             if (e.KeyCode == Keys.F8)
             {
@@ -74,7 +93,7 @@ namespace EmguCV_TextDetection
                 if (detectTextToolStripMenuItem.Enabled)
                 {
                     Bitmap bm = (Bitmap)(leftPicture.Image);
-                    DrawBoundingRectangles(bm.ToImage<Bgr, byte>());
+                    await DrawBoundingRectangles_Async(bm.ToImage<Bgr, byte>());
                 }
             }
             if (e.KeyCode == Keys.F9)
@@ -83,13 +102,13 @@ namespace EmguCV_TextDetection
                 if (translateTextToolStripMenuItem.Enabled)
                 {
                     Bitmap bitmap = (Bitmap)(leftPicture.Image);
-                    TranslateText(bitmap.ToImage<Bgr, byte>());
+                    await TranslateText(bitmap.ToImage<Bgr, byte>());
                 }
             }
 
         }
 
-        
+
         /**
          * Algorithm taken from https://www.youtube.com/watch?v=KHes5M7zpGg
          * Detect text in the image and get Bounding Rectangles around it.
@@ -119,7 +138,7 @@ namespace EmguCV_TextDetection
                 Rectangle brect = CvInvoke.BoundingRectangle(contours[i]);
 
                 // add more height and width to the rectangle
-                var value = 2; // adjustable in the future?!
+                var value = 0; // adjustable in the future?!
                 brect.X -= value;
                 brect.Y -= value;
                 brect.Width += value;
@@ -130,19 +149,21 @@ namespace EmguCV_TextDetection
                 {
                     list.Add(brect);
                 }
+
             }
 
             return list; // return the list of Rectangles
         }
+
         /**
          * Algorithm taken from https://www.youtube.com/watch?v=KHes5M7zpGg
          * Detect text in the image and draw Bounding Rectangles around it.
          */
-        private void DrawBoundingRectangles(Image<Bgr, byte> img)
+        private async Task DrawBoundingRectangles_Async(Image<Bgr, byte> img)
         {
-            List<Rectangle> list = GetBoudingRectangles(img);
+            List<Rectangle> currentRectlist = await Task.Run(() => GetBoudingRectangles(img));
             // draw the rectangles
-            foreach (var r in list)
+            foreach (var r in currentRectlist)
             {
                 CvInvoke.Rectangle(img, r, new MCvScalar(0, 0, 255), 2);
             }
@@ -155,24 +176,38 @@ namespace EmguCV_TextDetection
         /**
          * 
          */
-        private void translateTextToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void translateTextToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Bitmap bitmap = (Bitmap)(leftPicture.Image);
-            TranslateText(bitmap.ToImage<Bgr, byte>());
+            await TranslateText(bitmap.ToImage<Bgr, byte>());
         }
 
         /**
          * Detect text in the image and draw Bounding Rectangles around it.
          */
-        private void TranslateText(Image<Bgr, byte> img)
+        private async Task TranslateText(Image<Bgr, byte> img)
         {
-            List<Rectangle> list = GetBoudingRectangles(img);
-            // draw the rectangles
-            foreach (var r in list)
-            {
-                CvInvoke.Rectangle(img, r, new MCvScalar(0, 255, 255), -1);
-            }
+            List<Rectangle> currentRectList = await Task.Run(() => GetBoudingRectangles(img));
 
+
+            Boolean containsText = false;
+            foreach (var brect in currentRectList)
+            {
+                // check if the area contains text in the rectangle
+                using (var Input = new OcrInput())
+                {
+                    Input.AddImage(leftPicture.Image, brect);
+
+                    var Result = Ocr.Read(Input);
+                    containsText = !string.IsNullOrEmpty(Result.Text);
+
+                    if (containsText)
+                    {
+                        // draw the rectangles
+                        CvInvoke.Rectangle(img, brect, new MCvScalar(50, 50, 50), -1);
+                    }
+                }
+            }
             rightPicture.Image = null; // delete the old image
             System.GC.Collect();
             rightPicture.Image = img.ToBitmap();
