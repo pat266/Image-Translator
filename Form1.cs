@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -203,26 +204,45 @@ namespace EmguCV_TextDetection
                     // Input.ToGrayScale();
 
                     var Result = await Task.Run(() => Ocr.Read(Input));
-                    String LineText = Encoding.UTF8.GetString(Encoding.Default.GetBytes(Result.Text));
-                    Boolean containsText = !string.IsNullOrEmpty(LineText);
 
-                    StringFormat strFormat = new StringFormat();
-                    strFormat.Alignment = StringAlignment.Center;
-                    strFormat.LineAlignment = StringAlignment.Center;
-                    strFormat.FormatFlags = StringFormatFlags.NoFontFallback;
-
-                    if (containsText)
+                    // process the line of text
+                    if (Result.Lines.Length > 0)
                     {
-                        // draw the rectangles
-                        CvInvoke.Rectangle(img, brect, new MCvScalar(220, 220, 220), -1);
-                        // draw the text
-                        // CvInvoke.PutText(img, "Hello World", new Point(Result.Lines[0].X, Result.Lines[0].Y), Emgu.CV.CvEnum.FontFace.HersheySimplex, 1, new Bgr(Color.Black).MCvScalar);
-                        using (Graphics g = Graphics.FromImage(img.AsBitmap()))
+                        var Line = Result.Lines[0];
+                        string LineText = Line.Text;
+                        ///**
+                        int LineX_location = Line.X;
+                        int LineY_location = Line.Y;
+                        int LineWidth = Line.Width;
+                        int LineHeight = Line.Height;
+                        double LineOcrAccuracy = Line.Confidence;
+
+                        
+                        string createText = String.Format("LineText: {0}, X: {1}, Y: {2}, Width: {3}, Height: {4}, Confidence: {5}\n",
+                            LineText, LineX_location, LineY_location, LineWidth, LineHeight, LineOcrAccuracy);
+                        // File.AppendAllText(@".\result.txt", createText, Encoding.UTF8);
+                        //**/
+
+                        Boolean containsText = !string.IsNullOrEmpty(LineText);
+
+                        StringFormat strFormat = new StringFormat();
+                        strFormat.Alignment = StringAlignment.Center;
+                        strFormat.LineAlignment = StringAlignment.Center;
+
+                        if (containsText)
                         {
-                            
-                            g.DrawString(LineText, new Font("Times New Roman", 11), Brushes.Black, new RectangleF(brect.X, brect.Y, brect.Width, brect.Height), strFormat);
+                            // draw the rectangles
+                            CvInvoke.Rectangle(img, brect, new MCvScalar(220, 220, 220), -1);
+
+                            // draw the text
+                            using (Graphics g = Graphics.FromImage(img.AsBitmap()))
+                            {
+
+                                g.DrawString(LineText, new Font("Times New Roman", 11), Brushes.Black, new RectangleF(brect.X, brect.Y, brect.Width, brect.Height), strFormat);
+                            }
                         }
                     }
+                    
                 }
             }
             rightPicture.Image = null; // delete the old image
