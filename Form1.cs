@@ -54,7 +54,8 @@ namespace EmguCV_TextDetection
             Ocr.Configuration.ReadBarCodes = false;
             Ocr.Configuration.RenderSearchablePdfsAndHocr = false;
             // Assume text is laid out neatly in an orthagonal document
-            Ocr.Configuration.PageSegmentationMode = TesseractPageSegmentationMode.Auto;
+            Ocr.Configuration.PageSegmentationMode = TesseractPageSegmentationMode.SparseTextOsd;
+            // TesseractPageSegmentationMode.SparseTextOsd;
         }
 
         private void openImageToolStripMenuItem_Click(object sender, EventArgs e)
@@ -103,6 +104,7 @@ namespace EmguCV_TextDetection
                 {
                     Bitmap bitmap = (Bitmap)(leftPicture.Image);
                     await TranslateText(bitmap.ToImage<Bgr, byte>());
+                    //await TranslateText_IronOCR(bitmap);
                 }
             }
 
@@ -145,7 +147,7 @@ namespace EmguCV_TextDetection
                 brect.Height += value;
 
                 double ar = brect.Width / brect.Height;
-                if (ar > 2 && brect.Width > 10 && brect.Height > 10 && brect.Height < 30)
+                if (ar > 0.8 && brect.Width > 10 && brect.Height > 10 && brect.Height < 60)
                 {
                     list.Add(brect);
                 }
@@ -188,29 +190,85 @@ namespace EmguCV_TextDetection
         private async Task TranslateText(Image<Bgr, byte> img)
         {
             List<Rectangle> currentRectList = await Task.Run(() => GetBoudingRectangles(img));
-
-
-            Boolean containsText = false;
+            
             foreach (var brect in currentRectList)
             {
                 // check if the area contains text in the rectangle
                 using (var Input = new OcrInput())
                 {
+                    // Input.DeNoise();
                     Input.AddImage(leftPicture.Image, brect);
+                    // use the default value (https://ironsoftware.com/csharp/ocr/troubleshooting/x-and-y-coordinates-change/)
+                    Input.MinimumDPI = null;
+                    // Input.ToGrayScale();
 
-                    var Result = Ocr.Read(Input);
-                    containsText = !string.IsNullOrEmpty(Result.Text);
+                    var Result = await Task.Run(() => Ocr.Read(Input));
+                    String LineText = Encoding.UTF8.GetString(Encoding.Default.GetBytes(Result.Text));
+                    Boolean containsText = !string.IsNullOrEmpty(LineText);
+
+                    StringFormat strFormat = new StringFormat();
+                    strFormat.Alignment = StringAlignment.Center;
+                    strFormat.LineAlignment = StringAlignment.Center;
+                    strFormat.FormatFlags = StringFormatFlags.NoFontFallback;
 
                     if (containsText)
                     {
                         // draw the rectangles
-                        CvInvoke.Rectangle(img, brect, new MCvScalar(50, 50, 50), -1);
+                        CvInvoke.Rectangle(img, brect, new MCvScalar(220, 220, 220), -1);
+                        // draw the text
+                        // CvInvoke.PutText(img, "Hello World", new Point(Result.Lines[0].X, Result.Lines[0].Y), Emgu.CV.CvEnum.FontFace.HersheySimplex, 1, new Bgr(Color.Black).MCvScalar);
+                        using (Graphics g = Graphics.FromImage(img.AsBitmap()))
+                        {
+                            
+                            g.DrawString(LineText, new Font("Times New Roman", 11), Brushes.Black, new RectangleF(brect.X, brect.Y, brect.Width, brect.Height), strFormat);
+                        }
                     }
                 }
             }
             rightPicture.Image = null; // delete the old image
             System.GC.Collect();
             rightPicture.Image = img.ToBitmap();
+        }
+
+        private async Task TranslateText_IronOCR(Bitmap bitmap)
+        {
+            // Image<Bgr, byte> img = bitmap.ToImage<Bgr, byte>();
+            
+            using (var Input = new OcrInput(bitmap))
+            {
+                Input.TargetDPI = 300;
+
+                var Result = await Task.Run(() => Ocr.Read(Input));
+                Image<Bgr, byte> img = Result.Pages[0].ContentAreaToBitmap(Input).ToImage<Bgr, byte>();
+
+                foreach (var Line in Result.Lines)
+                {
+                    // only draw if the confidence is higher than 25%
+                    if (Line.Confidence > 0 && !string.IsNullOrEmpty(Line.Text))
+                    {
+                        String LineText = Encoding.UTF8.GetString(Encoding.Default.GetBytes(Line.Text));
+                        int LineX_location = Line.X;
+                        int LineY_location = Line.Y;
+                        int LineWidth = Line.Width;
+                        int LineHeight = Line.Height;
+                        double LineOcrAccuracy = Line.Confidence;
+
+                        Console.WriteLine("LineText: {0}\nX: {1}, Y: {2}\nWidth: {3}, Height: {4}, Confidence: {5}"
+                            , LineText, LineX_location, LineY_location, LineWidth, LineHeight, LineOcrAccuracy);
+
+                        Rectangle rect = new Rectangle(LineX_location, LineY_location, LineWidth, LineHeight);
+
+                        CvInvoke.Rectangle(img, rect, new MCvScalar(220, 220, 220), -1);
+                    }
+                    
+                }
+
+                rightPicture.Image = null; // delete the old image
+                System.GC.Collect();
+                Bitmap resized = new Bitmap(img.ToBitmap(), leftPicture.Size);
+                rightPicture.Image = resized;
+                // CvInvoke.Rectangle(img, brect, new MCvScalar(50, 50, 50), -1);
+            }
         }
     }
 }
