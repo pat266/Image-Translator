@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 using Emgu.CV;
 using Emgu.CV.Structure;
@@ -21,21 +18,26 @@ namespace EmguCV_TextDetection
         private readonly string[] SizeSuffixes =
                    { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
         private string memorySize, calculationTime;
-        
+
+
         private PictureBox leftPicture, rightPicture;
         private OpenFileDialog file;
 
         IronTesseract Ocr;
         public Form1()
         {
-            memorySize = string.Empty;
-            calculationTime = string.Empty;
-            
             InitializeComponent();
             // set true, otherwise key press is swallowed by the control that has focus
             this.KeyPreview = true;
             // add KeyEvent to the form
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(KeyEvent);
+
+            // initialize the memory size and calculation time
+            memorySize = string.Empty;
+            calculationTime = string.Empty;
+            // set the initial text in the form
+            labelCalculation.Text = calculationTime;
+            labelMemory.Text = memorySize;
 
             leftPicture = new PictureBox();
             rightPicture = new PictureBox();
@@ -98,7 +100,7 @@ namespace EmguCV_TextDetection
 
                 // enable the options in the MenuStrip
                 detectTextToolStripMenuItem.Enabled = true;
-                translateTextToolStripMenuItem.Enabled = true;
+                extractTextToolStripMenuItem.Enabled = true;
             }
         }
 
@@ -112,12 +114,32 @@ namespace EmguCV_TextDetection
             string selectedVal = (string)methodChoices.SelectedValue;
             if (selectedVal.Equals("0"))
             {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
 
+
+
+                stopwatch.Stop();
+                // This obtains the current application process
+                Process thisProcess = Process.GetCurrentProcess();
+                // This obtains the memory used by the process
+                long usedMemory = thisProcess.WorkingSet64;
+                CalculateStats(stopwatch, usedMemory);
             }
             else
             {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+
                 Bitmap bm = (Bitmap)(leftPicture.Image);
                 await DetectText_Async(bm.ToImage<Bgr, byte>());
+
+                stopwatch.Stop();
+                // This obtains the current application process
+                Process thisProcess = Process.GetCurrentProcess();
+                // This obtains the memory used by the process
+                long usedMemory = thisProcess.WorkingSet64;
+                CalculateStats(stopwatch, usedMemory);
             }
                 
         }
@@ -125,7 +147,7 @@ namespace EmguCV_TextDetection
         /**
          * 
          */
-        private async void translateTextToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void extractTextToolStripMenuItem_Click(object sender, EventArgs e)
         {
             /**
              * EmguCV + Onnx = "0"
@@ -135,18 +157,49 @@ namespace EmguCV_TextDetection
             string selectedVal = (string)methodChoices.SelectedValue;
             if (selectedVal.Equals("0"))
             {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
 
+
+
+                stopwatch.Stop();
+                // This obtains the current application process
+                Process thisProcess = Process.GetCurrentProcess();
+                // This obtains the memory used by the process
+                long usedMemory = thisProcess.WorkingSet64;
+                CalculateStats(stopwatch, usedMemory);
             }
             else
             {
                 Bitmap bm = (Bitmap)(leftPicture.Image);
                 if (selectedVal.Equals("1"))
                 {
-                    await TranslateText_IronOCR(bm);
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
+
+                    await ExtractText_IronOCR(bm);
+
+                    stopwatch.Stop();
+                    // This obtains the current application process
+                    Process thisProcess = Process.GetCurrentProcess();
+                    // This obtains the memory used by the process
+                    long usedMemory = thisProcess.WorkingSet64;
+                    CalculateStats(stopwatch, usedMemory);
                 }
                 else if (selectedVal.Equals("2"))
                 {
-                    await TranslateText(bm.ToImage<Bgr, byte>());
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
+
+                    await ExtractText(bm.ToImage<Bgr, byte>());
+
+                    stopwatch.Stop();
+                    // This obtains the current application process
+                    Process thisProcess = Process.GetCurrentProcess();
+                    // This obtains the memory used by the process
+                    long usedMemory = thisProcess.WorkingSet64;
+                    CalculateStats(stopwatch, usedMemory);
+                    
                 }
                     
             }
@@ -158,7 +211,7 @@ namespace EmguCV_TextDetection
          */
         private async void KeyEvent(object sender, KeyEventArgs e) //Keyup Event 
         {
-            if (!(translateTextToolStripMenuItem.Enabled && detectTextToolStripMenuItem.Enabled))
+            if (!(extractTextToolStripMenuItem.Enabled && detectTextToolStripMenuItem.Enabled))
             {
                 if (e.KeyCode == Keys.F8 || e.KeyCode == Keys.F9)
                 {
@@ -176,11 +229,31 @@ namespace EmguCV_TextDetection
                 // if we are currently using EmguCV + Onnx
                 if (e.KeyCode == Keys.F8)
                 {
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
+
                     
+
+                    stopwatch.Stop();
+                    // This obtains the current application process
+                    Process thisProcess = Process.GetCurrentProcess();
+                    // This obtains the memory used by the process
+                    long usedMemory = thisProcess.WorkingSet64;
+                    CalculateStats(stopwatch, usedMemory);
                 }
                 else if (e.KeyCode == Keys.F9)
                 {
-                    
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
+
+
+
+                    stopwatch.Stop();
+                    // This obtains the current application process
+                    Process thisProcess = Process.GetCurrentProcess();
+                    // This obtains the memory used by the process
+                    long usedMemory = thisProcess.WorkingSet64;
+                    CalculateStats(stopwatch, usedMemory);
                 }
             }
             else
@@ -194,29 +267,68 @@ namespace EmguCV_TextDetection
                         Bitmap bm = (Bitmap)(leftPicture.Image);
                         if (selectedVal.Equals("1"))
                         {
+                            Stopwatch stopwatch = new Stopwatch();
+                            stopwatch.Start();
+
                             await DetectTextIronOCR_Async(bm);
-                            Console.WriteLine(SizeSuffix(GC.GetTotalMemory(true)));
+
+                            stopwatch.Stop();
+                            // This obtains the current application process
+                            Process thisProcess = Process.GetCurrentProcess();
+                            // This obtains the memory used by the process
+                            long usedMemory = thisProcess.WorkingSet64;
+                            CalculateStats(stopwatch, usedMemory);
                         }
                         else if (selectedVal.Equals("2"))
                         {
+                            Stopwatch stopwatch = new Stopwatch();
+                            stopwatch.Start();
+                            
                             await DetectText_Async(bm.ToImage<Bgr, byte>());
-                            Console.WriteLine(SizeSuffix(GC.GetTotalMemory(true)));
+                            
+                            stopwatch.Stop();
+                            // This obtains the current application process
+                            Process thisProcess = Process.GetCurrentProcess();
+                            // This obtains the memory used by the process
+                            long usedMemory = thisProcess.WorkingSet64;
+                            CalculateStats(stopwatch, usedMemory);
                         }
                     }
                 }
                 if (e.KeyCode == Keys.F9)
                 {
-                    // translate the text when press F9
-                    if (translateTextToolStripMenuItem.Enabled)
+                    // extract the text when press F9
+                    if (extractTextToolStripMenuItem.Enabled)
                     {
                         Bitmap bitmap = (Bitmap)(leftPicture.Image);
                         if (selectedVal.Equals("1"))
                         {
-                            await TranslateText_IronOCR(bitmap);
+                            Stopwatch stopwatch = new Stopwatch();
+                            stopwatch.Start();
+
+                            await ExtractText_IronOCR(bitmap);
+
+                            stopwatch.Stop();
+                            // This obtains the current application process
+                            Process thisProcess = Process.GetCurrentProcess();
+                            // This obtains the memory used by the process
+                            long usedMemory = thisProcess.WorkingSet64;
+                            CalculateStats(stopwatch, usedMemory);
+                            
                         }
                         else if (selectedVal.Equals("2"))
                         {
-                            await TranslateText(bitmap.ToImage<Bgr, byte>());
+                            Stopwatch stopwatch = new Stopwatch();
+                            stopwatch.Start();
+
+                            await ExtractText(bitmap.ToImage<Bgr, byte>());
+
+                            stopwatch.Stop();
+                            // This obtains the current application process
+                            Process thisProcess = Process.GetCurrentProcess();
+                            // This obtains the memory used by the process
+                            long usedMemory = thisProcess.WorkingSet64;
+                            CalculateStats(stopwatch, usedMemory);
                         }
                     }
                 }
@@ -301,30 +413,36 @@ namespace EmguCV_TextDetection
                 SizeSuffixes[mag]);
         }
 
-        private string CalculateTime(Int64 value, int decimalPlaces = 1)
+        /**
+         * TimeSpan method taken from 
+         * https://stackoverflow.com/questions/51826732/is-there-a-concise-way-to-achieve-conditional-pluralization-of-timespan-format
+         */
+        private void CalculateStats(Stopwatch stopwatch, long memory)
         {
-            if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
-            if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); }
-            if (value == 0) { return string.Format("{0:n" + decimalPlaces + "} bytes", 0); }
+            // convert the time from ms to anything conditionally
+            TimeSpan ts = new TimeSpan(stopwatch.ElapsedTicks);
+            string[] TFormat = new[] {
+                (ts.Days > 1 ? ts.Days + " Days" : (ts.Days == 1 ? "1 Day" : "")),
+                (ts.Hours > 1 ? " "+ ts.Hours + " Hours" : (ts.Hours == 1 ? " 1 Hour" : "")),
+                (ts.Minutes > 1 ? " " + ts.Minutes + " Minutes" : (ts.Minutes == 1 ? " 1 Minute" : "")),
+                (ts.Seconds > 1 ? " " + ts.Seconds + " Seconds" : (ts.Seconds == 1 ? " 1 Second" : "")),
+                (ts.TotalMilliseconds < 1000 ? $"{ts.TotalMilliseconds }ms" : "")
+            };
+            calculationTime = String.Format($"{TFormat[0]}{TFormat[1]}{TFormat[2]}{TFormat[3]}{TFormat[4]}".TrimStart());
+            memorySize = SizeSuffix(memory);
+            UpdateStatsForm();
+        }
 
-            // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
-            int mag = (int)Math.Log(value, 1024);
+        private void UpdateStatsForm()
+        {
+            labelCalculation.Text = calculationTime;
+            labelMemory.Text = memorySize;
+        }
 
-            // 1L << (mag * 10) == 2 ^ (10 * mag) 
-            // [i.e. the number of bytes in the unit corresponding to mag]
-            decimal adjustedSize = (decimal)value / (1L << (mag * 10));
-
-            // make adjustment when the value is large enough that
-            // it would round up to 1000 or more
-            if (Math.Round(adjustedSize, decimalPlaces) >= 1000)
-            {
-                mag += 1;
-                adjustedSize /= 1024;
-            }
-
-            return string.Format("{0:n" + decimalPlaces + "} {1}",
-                adjustedSize,
-                SizeSuffixes[mag]);
+        private void PrintStats()
+        {
+            Console.WriteLine("Calculation Time: " + calculationTime);
+            Console.WriteLine("Memory Usage: " + memorySize);
         }
         #endregion
 
@@ -387,7 +505,7 @@ namespace EmguCV_TextDetection
         /**
          * Detect text in the image and draw Bounding Rectangles around it.
          */
-        private async Task TranslateText(Image<Bgr, byte> img)
+        private async Task ExtractText(Image<Bgr, byte> img)
         {
             List<Rectangle> currentRectList = await Task.Run(() => GetBoudingRectangles(img));
             
@@ -450,7 +568,7 @@ namespace EmguCV_TextDetection
 
         
 
-        private async Task TranslateText_IronOCR(Bitmap bitmap)
+        private async Task ExtractText_IronOCR(Bitmap bitmap)
         {
             // Image<Bgr, byte> img = bitmap.ToImage<Bgr, byte>();
             
@@ -466,7 +584,7 @@ namespace EmguCV_TextDetection
                     // only draw if the confidence is higher than 0%
                     if (Line.Confidence > 0 && !string.IsNullOrEmpty(Line.Text))
                     {
-                        String LineText = Encoding.UTF8.GetString(Encoding.Default.GetBytes(Line.Text));
+                        String LineText = Line.Text;
                         int LineX_location = Line.X;
                         int LineY_location = Line.Y;
                         int LineWidth = Line.Width;
@@ -476,11 +594,22 @@ namespace EmguCV_TextDetection
                         //Console.WriteLine("LineText: {0}\nX: {1}, Y: {2}\nWidth: {3}, Height: {4}, Confidence: {5}"
                         //   , LineText, LineX_location, LineY_location, LineWidth, LineHeight, LineOcrAccuracy);
 
+                        // draw the background
                         Rectangle rect = new Rectangle(LineX_location, LineY_location, LineWidth, LineHeight);
-
                         CvInvoke.Rectangle(img, rect, new MCvScalar(220, 220, 220), -1);
+
+                        // define the string format
+                        StringFormat strFormat = new StringFormat();
+                        strFormat.Alignment = StringAlignment.Center;
+                        strFormat.LineAlignment = StringAlignment.Center;
+                        
+                        // draw the text
+                        using (Graphics g = Graphics.FromImage(img.AsBitmap()))
+                        {
+                            g.DrawString(LineText, new Font("Times New Roman", 24), Brushes.Black, rect, strFormat);
+                        }
                     }
-                    
+
                 }
 
                 rightPicture.Image = null; // delete the old image
