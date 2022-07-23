@@ -18,12 +18,19 @@ namespace EmguCV_TextDetection
 {
     public partial class Form1 : Form
     {
+        private readonly string[] SizeSuffixes =
+                   { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+        private string memorySize, calculationTime;
+        
         private PictureBox leftPicture, rightPicture;
         private OpenFileDialog file;
 
         IronTesseract Ocr;
         public Form1()
         {
+            memorySize = string.Empty;
+            calculationTime = string.Empty;
+            
             InitializeComponent();
             // set true, otherwise key press is swallowed by the control that has focus
             this.KeyPreview = true;
@@ -55,8 +62,25 @@ namespace EmguCV_TextDetection
             Ocr.Configuration.ReadBarCodes = false;
             Ocr.Configuration.RenderSearchablePdfsAndHocr = false;
             // Assume text is laid out neatly in an orthagonal document
-            Ocr.Configuration.PageSegmentationMode = TesseractPageSegmentationMode.SparseTextOsd;
-            // TesseractPageSegmentationMode.SparseTextOsd;
+            Ocr.Configuration.PageSegmentationMode = TesseractPageSegmentationMode.SparseText;
+
+
+            methodChoices.DisplayMember = "Text";
+            methodChoices.ValueMember = "Value";
+
+            var items = new[] {
+                new { Text = "EmguCV + Onnx", Value = "0" },
+                new { Text = "IronOCR Only", Value = "1" },
+                new { Text = "EmguCV + IronOCR", Value = "2" }
+            };
+
+            methodChoices.DataSource = items;
+        }
+
+        private void methodChoices_SelectedValueChanged(object sender, EventArgs e)
+        {
+            rightPicture.Image = null; // delete the old image
+            System.GC.Collect();
         }
 
         private void openImageToolStripMenuItem_Click(object sender, EventArgs e)
@@ -80,8 +104,53 @@ namespace EmguCV_TextDetection
 
         private async void detectTextToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Bitmap bm = (Bitmap)(leftPicture.Image);
-            await DrawBoundingRectangles_Async(bm.ToImage<Bgr, byte>());
+            /**
+             * EmguCV + Onnx = "0"
+             * IronOCR Only = "1"
+             * EmguCV + IronOCR = "2"
+             */
+            string selectedVal = (string)methodChoices.SelectedValue;
+            if (selectedVal.Equals("0"))
+            {
+
+            }
+            else
+            {
+                Bitmap bm = (Bitmap)(leftPicture.Image);
+                await DetectText_Async(bm.ToImage<Bgr, byte>());
+            }
+                
+        }
+        
+        /**
+         * 
+         */
+        private async void translateTextToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            /**
+             * EmguCV + Onnx = "0"
+             * IronOCR Only = "1"
+             * EmguCV + IronOCR = "2"
+             */
+            string selectedVal = (string)methodChoices.SelectedValue;
+            if (selectedVal.Equals("0"))
+            {
+
+            }
+            else
+            {
+                Bitmap bm = (Bitmap)(leftPicture.Image);
+                if (selectedVal.Equals("1"))
+                {
+                    await TranslateText_IronOCR(bm);
+                }
+                else if (selectedVal.Equals("2"))
+                {
+                    await TranslateText(bm.ToImage<Bgr, byte>());
+                }
+                    
+            }
+            
         }
 
         /**
@@ -89,29 +158,74 @@ namespace EmguCV_TextDetection
          */
         private async void KeyEvent(object sender, KeyEventArgs e) //Keyup Event 
         {
-            if (e.KeyCode == Keys.F8)
+            if (!(translateTextToolStripMenuItem.Enabled && detectTextToolStripMenuItem.Enabled))
             {
-                // detect the text when press F8
-                if (detectTextToolStripMenuItem.Enabled)
+                if (e.KeyCode == Keys.F8 || e.KeyCode == Keys.F9)
                 {
-                    Bitmap bm = (Bitmap)(leftPicture.Image);
-                    await DrawBoundingRectangles_Async(bm.ToImage<Bgr, byte>());
+                    MessageBox.Show("Please insert an image", "Image not found!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            if (e.KeyCode == Keys.F9)
+            /**
+             * EmguCV + Onnx = "0"
+             * IronOCR Only = "1"
+             * EmguCV + IronOCR = "2"
+             */
+            string selectedVal = (string)methodChoices.SelectedValue;
+            if (selectedVal.Equals("0"))
             {
-                // translate the text when press F9
-                if (translateTextToolStripMenuItem.Enabled)
+                // if we are currently using EmguCV + Onnx
+                if (e.KeyCode == Keys.F8)
                 {
-                    Bitmap bitmap = (Bitmap)(leftPicture.Image);
-                    await TranslateText(bitmap.ToImage<Bgr, byte>());
-                    //await TranslateText_IronOCR(bitmap);
+                    
+                }
+                else if (e.KeyCode == Keys.F9)
+                {
+                    
                 }
             }
+            else
+            {
+                // if we choose IronOCR only or EmguCV + IronOCR
+                if (e.KeyCode == Keys.F8)
+                {
+                    // detect the text when press F8
+                    if (detectTextToolStripMenuItem.Enabled)
+                    {
+                        Bitmap bm = (Bitmap)(leftPicture.Image);
+                        if (selectedVal.Equals("1"))
+                        {
+                            await DetectTextIronOCR_Async(bm);
+                            Console.WriteLine(SizeSuffix(GC.GetTotalMemory(true)));
+                        }
+                        else if (selectedVal.Equals("2"))
+                        {
+                            await DetectText_Async(bm.ToImage<Bgr, byte>());
+                            Console.WriteLine(SizeSuffix(GC.GetTotalMemory(true)));
+                        }
+                    }
+                }
+                if (e.KeyCode == Keys.F9)
+                {
+                    // translate the text when press F9
+                    if (translateTextToolStripMenuItem.Enabled)
+                    {
+                        Bitmap bitmap = (Bitmap)(leftPicture.Image);
+                        if (selectedVal.Equals("1"))
+                        {
+                            await TranslateText_IronOCR(bitmap);
+                        }
+                        else if (selectedVal.Equals("2"))
+                        {
+                            await TranslateText(bitmap.ToImage<Bgr, byte>());
+                        }
+                    }
+                }
+            }
+            
 
         }
 
-
+        #region "Helper Methods"
         /**
          * Algorithm taken from https://www.youtube.com/watch?v=KHes5M7zpGg
          * Detect text in the image and get Bounding Rectangles around it.
@@ -159,10 +273,66 @@ namespace EmguCV_TextDetection
         }
 
         /**
-         * Algorithm taken from https://www.youtube.com/watch?v=KHes5M7zpGg
+         * Taken from https://stackoverflow.com/questions/14488796/does-net-provide-an-easy-way-convert-bytes-to-kb-mb-gb-etc
+         */
+        private string SizeSuffix(Int64 value, int decimalPlaces = 1)
+        {
+            if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
+            if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); }
+            if (value == 0) { return string.Format("{0:n" + decimalPlaces + "} bytes", 0); }
+
+            // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
+            int mag = (int)Math.Log(value, 1024);
+
+            // 1L << (mag * 10) == 2 ^ (10 * mag) 
+            // [i.e. the number of bytes in the unit corresponding to mag]
+            decimal adjustedSize = (decimal)value / (1L << (mag * 10));
+
+            // make adjustment when the value is large enough that
+            // it would round up to 1000 or more
+            if (Math.Round(adjustedSize, decimalPlaces) >= 1000)
+            {
+                mag += 1;
+                adjustedSize /= 1024;
+            }
+
+            return string.Format("{0:n" + decimalPlaces + "} {1}",
+                adjustedSize,
+                SizeSuffixes[mag]);
+        }
+
+        private string CalculateTime(Int64 value, int decimalPlaces = 1)
+        {
+            if (decimalPlaces < 0) { throw new ArgumentOutOfRangeException("decimalPlaces"); }
+            if (value < 0) { return "-" + SizeSuffix(-value, decimalPlaces); }
+            if (value == 0) { return string.Format("{0:n" + decimalPlaces + "} bytes", 0); }
+
+            // mag is 0 for bytes, 1 for KB, 2, for MB, etc.
+            int mag = (int)Math.Log(value, 1024);
+
+            // 1L << (mag * 10) == 2 ^ (10 * mag) 
+            // [i.e. the number of bytes in the unit corresponding to mag]
+            decimal adjustedSize = (decimal)value / (1L << (mag * 10));
+
+            // make adjustment when the value is large enough that
+            // it would round up to 1000 or more
+            if (Math.Round(adjustedSize, decimalPlaces) >= 1000)
+            {
+                mag += 1;
+                adjustedSize /= 1024;
+            }
+
+            return string.Format("{0:n" + decimalPlaces + "} {1}",
+                adjustedSize,
+                SizeSuffixes[mag]);
+        }
+        #endregion
+
+        #region "Detecting Text"
+        /**
          * Detect text in the image and draw Bounding Rectangles around it.
          */
-        private async Task DrawBoundingRectangles_Async(Image<Bgr, byte> img)
+        private async Task DetectText_Async(Image<Bgr, byte> img)
         {
             List<Rectangle> currentRectlist = await Task.Run(() => GetBoudingRectangles(img));
             // draw the rectangles
@@ -176,15 +346,44 @@ namespace EmguCV_TextDetection
             rightPicture.Image = img.ToBitmap();
         }
 
-        /**
-         * 
-         */
-        private async void translateTextToolStripMenuItem_Click(object sender, EventArgs e)
+        private async Task DetectTextIronOCR_Async(Bitmap bitmap)
         {
-            Bitmap bitmap = (Bitmap)(leftPicture.Image);
-            await TranslateText(bitmap.ToImage<Bgr, byte>());
-        }
+            // Image<Bgr, byte> img = bitmap.ToImage<Bgr, byte>();
 
+            using (var Input = new OcrInput(bitmap))
+            {
+                Input.TargetDPI = 300;
+
+                var Result = await Task.Run(() => Ocr.Read(Input));
+                Image<Bgr, byte> img = Result.Pages[0].ContentAreaToBitmap(Input).ToImage<Bgr, byte>();
+
+                foreach (var Line in Result.Lines)
+                {
+                    // only draw if the confidence is higher than 0%
+                    if (Line.Confidence > 0 && !string.IsNullOrEmpty(Line.Text))
+                    {
+                        String LineText = Encoding.UTF8.GetString(Encoding.Default.GetBytes(Line.Text));
+                        int LineX_location = Line.X;
+                        int LineY_location = Line.Y;
+                        int LineWidth = Line.Width;
+                        int LineHeight = Line.Height;
+                        Rectangle rect = new Rectangle(LineX_location, LineY_location, LineWidth, LineHeight);
+
+                        CvInvoke.Rectangle(img, rect, new MCvScalar(0, 0, 255), 2);
+                    }
+
+                }
+
+                rightPicture.Image = null; // delete the old image
+                System.GC.Collect();
+                Bitmap resized = new Bitmap(img.ToBitmap(), leftPicture.Size);
+                rightPicture.Image = resized;
+                // CvInvoke.Rectangle(img, brect, new MCvScalar(50, 50, 50), -1);
+            }
+        }
+        #endregion
+
+        #region "Translating Text"
         /**
          * Detect text in the image and draw Bounding Rectangles around it.
          */
@@ -197,12 +396,11 @@ namespace EmguCV_TextDetection
                 // check if the area contains text in the rectangle
                 using (var Input = new OcrInput())
                 {
-                    // Input.DeNoise();
                     Input.AddImage(leftPicture.Image, brect);
                     // use the default value (https://ironsoftware.com/csharp/ocr/troubleshooting/x-and-y-coordinates-change/)
-                    Input.MinimumDPI = null;
-                    // Input.ToGrayScale();
-
+                    // Input.MinimumDPI = null;
+                    Input.ToGrayScale();
+                    
                     var Result = await Task.Run(() => Ocr.Read(Input));
 
                     // process the line of text
@@ -250,6 +448,8 @@ namespace EmguCV_TextDetection
             rightPicture.Image = img.ToBitmap();
         }
 
+        
+
         private async Task TranslateText_IronOCR(Bitmap bitmap)
         {
             // Image<Bgr, byte> img = bitmap.ToImage<Bgr, byte>();
@@ -263,7 +463,7 @@ namespace EmguCV_TextDetection
 
                 foreach (var Line in Result.Lines)
                 {
-                    // only draw if the confidence is higher than 25%
+                    // only draw if the confidence is higher than 0%
                     if (Line.Confidence > 0 && !string.IsNullOrEmpty(Line.Text))
                     {
                         String LineText = Encoding.UTF8.GetString(Encoding.Default.GetBytes(Line.Text));
@@ -273,8 +473,8 @@ namespace EmguCV_TextDetection
                         int LineHeight = Line.Height;
                         double LineOcrAccuracy = Line.Confidence;
 
-                        Console.WriteLine("LineText: {0}\nX: {1}, Y: {2}\nWidth: {3}, Height: {4}, Confidence: {5}"
-                            , LineText, LineX_location, LineY_location, LineWidth, LineHeight, LineOcrAccuracy);
+                        //Console.WriteLine("LineText: {0}\nX: {1}, Y: {2}\nWidth: {3}, Height: {4}, Confidence: {5}"
+                        //   , LineText, LineX_location, LineY_location, LineWidth, LineHeight, LineOcrAccuracy);
 
                         Rectangle rect = new Rectangle(LineX_location, LineY_location, LineWidth, LineHeight);
 
@@ -290,5 +490,6 @@ namespace EmguCV_TextDetection
                 // CvInvoke.Rectangle(img, brect, new MCvScalar(50, 50, 50), -1);
             }
         }
+        #endregion
     }
 }
