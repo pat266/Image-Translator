@@ -10,6 +10,10 @@ using Emgu.CV;
 using Emgu.CV.Structure;
 
 using IronOcr;
+using System.IO;
+
+using GTranslate.Translators;
+using System.Drawing.Drawing2D;
 
 namespace EmguCV_TextDetection
 {
@@ -23,7 +27,9 @@ namespace EmguCV_TextDetection
         private PictureBox leftPicture, rightPicture;
         private OpenFileDialog file;
 
-        IronTesseract Ocr;
+        private IronTesseract Ocr;
+        private AggregateTranslator translator;
+
         public Form1()
         {
             InitializeComponent();
@@ -39,6 +45,7 @@ namespace EmguCV_TextDetection
             labelCalculation.Text = calculationTime;
             labelMemory.Text = memorySize;
 
+
             leftPicture = new PictureBox();
             rightPicture = new PictureBox();
 
@@ -50,7 +57,10 @@ namespace EmguCV_TextDetection
 
             flowLayoutPanel1.Controls.Add(leftPicture);
             flowLayoutPanel2.Controls.Add(rightPicture);
-
+            
+            // initialize the Translator
+            translator = new AggregateTranslator();
+            
             // initialize for IronOCR
             Ocr = new IronTesseract();
 
@@ -101,6 +111,7 @@ namespace EmguCV_TextDetection
                 // enable the options in the MenuStrip
                 detectTextToolStripMenuItem.Enabled = true;
                 extractTextToolStripMenuItem.Enabled = true;
+                translateTextToolStripMenuItem.Enabled = true;
             }
         }
 
@@ -206,6 +217,64 @@ namespace EmguCV_TextDetection
             
         }
 
+        private async void translateTextToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            /**
+             * EmguCV + Onnx = "0"
+             * IronOCR Only = "1"
+             * EmguCV + IronOCR = "2"
+             */
+            string selectedVal = (string)methodChoices.SelectedValue;
+            if (selectedVal.Equals("0"))
+            {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+
+
+
+                stopwatch.Stop();
+                // This obtains the current application process
+                Process thisProcess = Process.GetCurrentProcess();
+                // This obtains the memory used by the process
+                long usedMemory = thisProcess.WorkingSet64;
+                CalculateStats(stopwatch, usedMemory);
+            }
+            else
+            {
+                Bitmap bm = (Bitmap)(leftPicture.Image);
+                if (selectedVal.Equals("1"))
+                {
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
+
+                    await TranslateText_IronOCR(bm);
+
+                    stopwatch.Stop();
+                    // This obtains the current application process
+                    Process thisProcess = Process.GetCurrentProcess();
+                    // This obtains the memory used by the process
+                    long usedMemory = thisProcess.WorkingSet64;
+                    CalculateStats(stopwatch, usedMemory);
+                }
+                else if (selectedVal.Equals("2"))
+                {
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
+
+                    await TranslateText(bm.ToImage<Bgr, byte>());
+
+                    stopwatch.Stop();
+                    // This obtains the current application process
+                    Process thisProcess = Process.GetCurrentProcess();
+                    // This obtains the memory used by the process
+                    long usedMemory = thisProcess.WorkingSet64;
+                    CalculateStats(stopwatch, usedMemory);
+
+                }
+
+            }
+        }
+
         /**
          * Method to handle various methods from pressing down the key
          */
@@ -213,7 +282,7 @@ namespace EmguCV_TextDetection
         {
             if (!(extractTextToolStripMenuItem.Enabled && detectTextToolStripMenuItem.Enabled))
             {
-                if (e.KeyCode == Keys.F8 || e.KeyCode == Keys.F9)
+                if (e.KeyCode == Keys.F8 || e.KeyCode == Keys.F9 || e.KeyCode == Keys.F10)
                 {
                     MessageBox.Show("Please insert an image", "Image not found!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
@@ -242,6 +311,20 @@ namespace EmguCV_TextDetection
                     CalculateStats(stopwatch, usedMemory);
                 }
                 else if (e.KeyCode == Keys.F9)
+                {
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
+
+
+
+                    stopwatch.Stop();
+                    // This obtains the current application process
+                    Process thisProcess = Process.GetCurrentProcess();
+                    // This obtains the memory used by the process
+                    long usedMemory = thisProcess.WorkingSet64;
+                    CalculateStats(stopwatch, usedMemory);
+                }
+                else if (e.KeyCode == Keys.F10)
                 {
                     Stopwatch stopwatch = new Stopwatch();
                     stopwatch.Start();
@@ -295,7 +378,7 @@ namespace EmguCV_TextDetection
                         }
                     }
                 }
-                if (e.KeyCode == Keys.F9)
+                else if (e.KeyCode == Keys.F9)
                 {
                     // extract the text when press F9
                     if (extractTextToolStripMenuItem.Enabled)
@@ -322,6 +405,43 @@ namespace EmguCV_TextDetection
                             stopwatch.Start();
 
                             await ExtractText(bitmap.ToImage<Bgr, byte>());
+
+                            stopwatch.Stop();
+                            // This obtains the current application process
+                            Process thisProcess = Process.GetCurrentProcess();
+                            // This obtains the memory used by the process
+                            long usedMemory = thisProcess.WorkingSet64;
+                            CalculateStats(stopwatch, usedMemory);
+                        }
+                    }
+                }
+                else if (e.KeyCode == Keys.F10)
+                {
+                    // translate the text when press F10
+                    if (translateTextToolStripMenuItem.Enabled)
+                    {
+                        Bitmap bitmap = (Bitmap)(leftPicture.Image);
+                        if (selectedVal.Equals("1"))
+                        {
+                            Stopwatch stopwatch = new Stopwatch();
+                            stopwatch.Start();
+
+                            await TranslateText_IronOCR(bitmap);
+
+                            stopwatch.Stop();
+                            // This obtains the current application process
+                            Process thisProcess = Process.GetCurrentProcess();
+                            // This obtains the memory used by the process
+                            long usedMemory = thisProcess.WorkingSet64;
+                            CalculateStats(stopwatch, usedMemory);
+
+                        }
+                        else if (selectedVal.Equals("2"))
+                        {
+                            Stopwatch stopwatch = new Stopwatch();
+                            stopwatch.Start();
+
+                            await TranslateText(bitmap.ToImage<Bgr, byte>());
 
                             stopwatch.Stop();
                             // This obtains the current application process
@@ -385,6 +505,7 @@ namespace EmguCV_TextDetection
         }
 
         /**
+         * A converter method to convert bytes to the appropriate size (kb, mb, etc.)
          * Taken from https://stackoverflow.com/questions/14488796/does-net-provide-an-easy-way-convert-bytes-to-kb-mb-gb-etc
          */
         private string SizeSuffix(Int64 value, int decimalPlaces = 1)
@@ -414,6 +535,7 @@ namespace EmguCV_TextDetection
         }
 
         /**
+         * Update both strings that contain the statistics of the current algorithm.
          * TimeSpan method taken from 
          * https://stackoverflow.com/questions/51826732/is-there-a-concise-way-to-achieve-conditional-pluralization-of-timespan-format
          */
@@ -433,17 +555,86 @@ namespace EmguCV_TextDetection
             UpdateStatsForm();
         }
 
+        /**
+         * Helper Method: Update the stats form with the current stats
+         */
         private void UpdateStatsForm()
         {
             labelCalculation.Text = calculationTime;
             labelMemory.Text = memorySize;
         }
 
+        /**
+         * Helper Method: print out the calculation time and the memory usage
+         */
         private void PrintStats()
         {
             Console.WriteLine("Calculation Time: " + calculationTime);
             Console.WriteLine("Memory Usage: " + memorySize);
         }
+        
+        /**
+         * Helper method: Utilizes GTranslate library to detect language and translate to English
+         */
+        private async Task<string> Translate(string text)
+        {
+            var result = await translator.TranslateAsync(text, "en");
+
+            return result.Translation;
+        }
+
+        /**
+         * Change the text font size if it does not fit vertically
+         */
+        private Font changeTextFont(Graphics g, Font font, string translatedText, Rectangle rect)
+        {
+            var textSize = g.MeasureString(translatedText, font);
+            bool fitVertically = textSize.Height <= rect.Height;
+            while (!fitVertically)
+            {
+                font = new Font(font.FontFamily, font.Size - 1, font.Style);
+                textSize = g.MeasureString(translatedText, font);
+                fitVertically = textSize.Height <= rect.Height;
+            }
+            System.GC.Collect();
+            return font;
+        }
+
+        /**
+         * Helper method to draw the rectangles and translated text on the image
+         * If the text is too long, it will be resized horizontally
+         */
+        private void drawTranslatedText(Graphics g, Brush brush, Font font, string translatedText, Rectangle rect)
+        {
+            // change the font size if it does not fit vertically
+            font = changeTextFont(g, font, translatedText, rect);
+            
+            // improve the quality of the text rendering
+            g.InterpolationMode = InterpolationMode.High;
+            g.CompositingQuality = CompositingQuality.HighQuality;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            // fill in the background of the rectangle
+            g.FillRectangle(brush, rect);
+            var textSize = g.MeasureString(translatedText, font);
+            if (textSize.Width > rect.Width)
+            {
+                // if the text is too wide, scale it down horizontally
+                var state = g.Save();
+                g.TranslateTransform(rect.Left, rect.Top);
+                // scale horizontally, keep the vertical size the same
+                Console.WriteLine("The ratio is {0} and text: {1}", (float)(rect.Width / textSize.Width),  translatedText);
+                g.ScaleTransform((float)(rect.Width / textSize.Width), 1);
+                g.DrawString(translatedText, font, Brushes.Black, PointF.Empty);
+                g.Restore(state);
+            }
+            else
+            {
+                // if the text is smaller than the rectangle, write it
+                g.DrawString(translatedText, font, Brushes.Black, rect);
+            }
+        }
+
         #endregion
 
         #region "Detecting Text"
@@ -501,7 +692,7 @@ namespace EmguCV_TextDetection
         }
         #endregion
 
-        #region "Translating Text"
+        #region "Extracting Text"
         /**
          * Detect text in the image and draw Bounding Rectangles around it.
          */
@@ -553,7 +744,6 @@ namespace EmguCV_TextDetection
                             // draw the text
                             using (Graphics g = Graphics.FromImage(img.AsBitmap()))
                             {
-
                                 g.DrawString(LineText, new Font("Times New Roman", 11), Brushes.Black, new RectangleF(brect.X, brect.Y, brect.Width, brect.Height), strFormat);
                             }
                         }
@@ -617,6 +807,113 @@ namespace EmguCV_TextDetection
                 Bitmap resized = new Bitmap(img.ToBitmap(), leftPicture.Size);
                 rightPicture.Image = resized;
                 // CvInvoke.Rectangle(img, brect, new MCvScalar(50, 50, 50), -1);
+            }
+        }
+
+        #endregion
+
+        #region "Translating Text"
+        /**
+         * Detect text in the image and draw Bounding Rectangles around it.
+         */
+        private async Task TranslateText(Image<Bgr, byte> img)
+        {
+            List<Rectangle> currentRectList = await Task.Run(() => GetBoudingRectangles(img));
+
+            Font font = new Font("Tahoma", 18, GraphicsUnit.Point);
+
+            foreach (var rect in currentRectList)
+            {
+                // check if the area contains text in the rectangle
+                using (var Input = new OcrInput())
+                {
+                    Input.AddImage(leftPicture.Image, rect);
+                    // use the default value (https://ironsoftware.com/csharp/ocr/troubleshooting/x-and-y-coordinates-change/)
+                    // Input.MinimumDPI = null;
+                    Input.ToGrayScale();
+
+                    var Result = await Task.Run(() => Ocr.Read(Input));
+
+                    // process the line of text
+                    if (Result.Lines.Length > 0)
+                    {
+                        var Line = Result.Lines[0];
+                        string LineText = Line.Text;
+                        ///**
+                        int LineX_location = Line.X;
+                        int LineY_location = Line.Y;
+                        int LineWidth = Line.Width;
+                        int LineHeight = Line.Height;
+
+                        Boolean containsText = !string.IsNullOrEmpty(LineText);
+                        if (containsText)
+                        {
+                            // draw the text
+                            using (Graphics g = Graphics.FromImage(img.AsBitmap()))
+                            {
+                                int alpha = 255; // from 0-255, 128 is 50% opacity
+                                int red = 220, green = 220, blue = 220;
+                                using (Brush brush = new SolidBrush(Color.FromArgb(alpha, red, green, blue)))
+                                {
+                                    var translatedText = await Task.Run(() => Translate(LineText).Result);
+                                    drawTranslatedText(g, brush, font, translatedText, rect);
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+            rightPicture.Image = null; // delete the old image
+            System.GC.Collect();
+            rightPicture.Image = img.ToBitmap();
+        }
+
+
+
+        private async Task TranslateText_IronOCR(Bitmap bitmap)
+        {
+            using (var Input = new OcrInput(bitmap))
+            {
+                Input.TargetDPI = 300;
+
+                var Result = await Task.Run(() => Ocr.Read(Input));
+                Image<Bgr, byte> img = Result.Pages[0].ContentAreaToBitmap(Input).ToImage<Bgr, byte>();
+                Font font = new Font("Tahoma", 24, GraphicsUnit.Point);
+
+                foreach (var Line in Result.Lines)
+                {
+                    // only draw if the confidence is higher than 0%
+                    if (Line.Confidence > 0 && !string.IsNullOrEmpty(Line.Text))
+                    {
+                        String LineText = Line.Text;
+                        int LineX_location = Line.X;
+                        int LineY_location = Line.Y;
+                        int LineWidth = Line.Width;
+                        int LineHeight = Line.Height;
+
+                        // draw the background
+                        Rectangle rect = new Rectangle(LineX_location, LineY_location, LineWidth, LineHeight);
+
+                        // draw the text
+                        using (Graphics g = Graphics.FromImage(img.AsBitmap()))
+                        {
+                            int alpha = 255; // from 0-255, 128 is 50% opacity
+                            int red = 220, green = 220, blue = 220;
+                            using (Brush brush = new SolidBrush(Color.FromArgb(alpha, red, green, blue)))
+                            {
+                                var translatedText = await Task.Run(() => Translate(LineText).Result);
+                                drawTranslatedText(g, brush, font, translatedText, rect);
+                            }
+                        }
+                    }
+
+                }
+                
+                rightPicture.Image = null; // delete the old image
+                System.GC.Collect();
+                Bitmap resized = new Bitmap(img.ToBitmap(), leftPicture.Size);
+                rightPicture.Image = resized;
             }
         }
         #endregion

@@ -34,6 +34,7 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.detectTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.extractTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.translateTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
@@ -65,7 +66,8 @@
             this.openImageToolStripMenuItem,
             this.toolStripSeparator1,
             this.detectTextToolStripMenuItem,
-            this.extractTextToolStripMenuItem});
+            this.extractTextToolStripMenuItem,
+            this.translateTextToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 22);
             this.fileToolStripMenuItem.Text = "File";
@@ -97,6 +99,14 @@
             this.extractTextToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.extractTextToolStripMenuItem.Text = "Extract Text (F9)";
             this.extractTextToolStripMenuItem.Click += new System.EventHandler(this.extractTextToolStripMenuItem_Click);
+            // 
+            // translateTextToolStripMenuItem
+            // 
+            this.translateTextToolStripMenuItem.Enabled = false;
+            this.translateTextToolStripMenuItem.Name = "translateTextToolStripMenuItem";
+            this.translateTextToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.translateTextToolStripMenuItem.Text = "Translate Text (F10)";
+            this.translateTextToolStripMenuItem.Click += new System.EventHandler(this.translateTextToolStripMenuItem_Click);
             // 
             // flowLayoutPanel1
             // 
@@ -231,6 +241,7 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label labelCalculation;
         private System.Windows.Forms.Label labelMemory;
+        private System.Windows.Forms.ToolStripMenuItem translateTextToolStripMenuItem;
     }
 }
 
