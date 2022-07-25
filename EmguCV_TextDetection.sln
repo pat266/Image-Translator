@@ -5,16 +5,42 @@ VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmguCV_TextDetection", "EmguCV_TextDetection.csproj", "{682CD46B-A1A7-48CE-8961-9BA992CB34BB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OcrLiteLib", "OcrLiteLib\OcrLiteLib.csproj", "{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|ARM64 = Debug|ARM64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|ARM64 = Release|ARM64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Debug|x86.Build.0 = Debug|Any CPU
 		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Release|ARM64.Build.0 = Release|Any CPU
+		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Release|x86.ActiveCfg = Release|Any CPU
+		{682CD46B-A1A7-48CE-8961-9BA992CB34BB}.Release|x86.Build.0 = Release|Any CPU
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Debug|ARM64.Build.0 = Debug|ARM64
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Debug|x86.ActiveCfg = Debug|Win32
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Debug|x86.Build.0 = Debug|Win32
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Release|ARM64.ActiveCfg = Release|ARM64
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Release|ARM64.Build.0 = Release|ARM64
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Release|x86.ActiveCfg = Release|Win32
+		{3A1647DA-83CD-4F9D-9FFA-F663BB55FF6A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

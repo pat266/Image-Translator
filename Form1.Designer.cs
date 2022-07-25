@@ -75,20 +75,20 @@
             // openImageToolStripMenuItem
             // 
             this.openImageToolStripMenuItem.Name = "openImageToolStripMenuItem";
-            this.openImageToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.openImageToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
             this.openImageToolStripMenuItem.Text = "Pick Image";
             this.openImageToolStripMenuItem.Click += new System.EventHandler(this.openImageToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(170, 6);
             // 
             // detectTextToolStripMenuItem
             // 
             this.detectTextToolStripMenuItem.Enabled = false;
             this.detectTextToolStripMenuItem.Name = "detectTextToolStripMenuItem";
-            this.detectTextToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.detectTextToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
             this.detectTextToolStripMenuItem.Text = "Detect Text (F8)";
             this.detectTextToolStripMenuItem.Click += new System.EventHandler(this.detectTextToolStripMenuItem_Click);
             // 
@@ -96,7 +96,7 @@
             // 
             this.extractTextToolStripMenuItem.Enabled = false;
             this.extractTextToolStripMenuItem.Name = "extractTextToolStripMenuItem";
-            this.extractTextToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.extractTextToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
             this.extractTextToolStripMenuItem.Text = "Extract Text (F9)";
             this.extractTextToolStripMenuItem.Click += new System.EventHandler(this.extractTextToolStripMenuItem_Click);
             // 
@@ -104,7 +104,7 @@
             // 
             this.translateTextToolStripMenuItem.Enabled = false;
             this.translateTextToolStripMenuItem.Name = "translateTextToolStripMenuItem";
-            this.translateTextToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.translateTextToolStripMenuItem.Size = new System.Drawing.Size(173, 22);
             this.translateTextToolStripMenuItem.Text = "Translate Text (F10)";
             this.translateTextToolStripMenuItem.Click += new System.EventHandler(this.translateTextToolStripMenuItem_Click);
             // 

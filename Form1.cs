@@ -10,10 +10,12 @@ using Emgu.CV;
 using Emgu.CV.Structure;
 
 using IronOcr;
-using System.IO;
+using OcrLiteLib;
 
 using GTranslate.Translators;
 using System.Drawing.Drawing2D;
+using System.IO;
+using Emgu.CV.CvEnum;
 
 namespace EmguCV_TextDetection
 {
@@ -28,6 +30,8 @@ namespace EmguCV_TextDetection
         private OpenFileDialog file;
 
         private IronTesseract Ocr;
+        private OcrLite ocrEngin;
+        
         private AggregateTranslator translator;
 
         public Form1()
@@ -45,7 +49,6 @@ namespace EmguCV_TextDetection
             labelCalculation.Text = calculationTime;
             labelMemory.Text = memorySize;
 
-
             leftPicture = new PictureBox();
             rightPicture = new PictureBox();
 
@@ -61,22 +64,7 @@ namespace EmguCV_TextDetection
             // initialize the Translator
             translator = new AggregateTranslator();
             
-            // initialize for IronOCR
-            Ocr = new IronTesseract();
-
-            // improve speed
-            Ocr.Language = OcrLanguage.ChineseSimplifiedFast;
-            // Latest Engine 
-            Ocr.Configuration.TesseractVersion = TesseractVersion.Tesseract5;
-            //AI OCR only without font analysis
-            Ocr.Configuration.EngineMode = TesseractEngineMode.LstmOnly;
-            //Turn off unneeded options
-            Ocr.Configuration.ReadBarCodes = false;
-            Ocr.Configuration.RenderSearchablePdfsAndHocr = false;
-            // Assume text is laid out neatly in an orthagonal document
-            Ocr.Configuration.PageSegmentationMode = TesseractPageSegmentationMode.SparseText;
-
-
+            // dislay various options for detecting and translating text
             methodChoices.DisplayMember = "Text";
             methodChoices.ValueMember = "Value";
 
@@ -93,8 +81,39 @@ namespace EmguCV_TextDetection
         {
             rightPicture.Image = null; // delete the old image
             System.GC.Collect();
+            if (methodChoices.Items.Count == 3)
+            {
+                if (methodChoices.SelectedIndex == 0)
+                {
+                    // load Onxx model
+                    loadOnnxModel();
+                }
+                else
+                {
+                    if (Ocr == null)
+                    {
+                        // initialize for IronOCR
+                        Ocr = new IronTesseract();
+
+                        // improve speed
+                        Ocr.Language = OcrLanguage.ChineseSimplifiedFast;
+                        // Latest Engine 
+                        Ocr.Configuration.TesseractVersion = TesseractVersion.Tesseract5;
+                        //AI OCR only without font analysis
+                        Ocr.Configuration.EngineMode = TesseractEngineMode.LstmOnly;
+                        //Turn off unneeded options
+                        Ocr.Configuration.ReadBarCodes = false;
+                        Ocr.Configuration.RenderSearchablePdfsAndHocr = false;
+                        // Assume text is laid out neatly in an orthagonal document
+                        Ocr.Configuration.PageSegmentationMode = TesseractPageSegmentationMode.SparseText;
+                    }
+                    
+                }
+            }
+            
         }
 
+        #region "Click events"
         private void openImageToolStripMenuItem_Click(object sender, EventArgs e)
         {
             file = new OpenFileDialog
@@ -274,7 +293,8 @@ namespace EmguCV_TextDetection
 
             }
         }
-
+        #endregion
+        
         /**
          * Method to handle various methods from pressing down the key
          */
@@ -293,6 +313,7 @@ namespace EmguCV_TextDetection
              * EmguCV + IronOCR = "2"
              */
             string selectedVal = (string)methodChoices.SelectedValue;
+            Bitmap bitmap = (Bitmap)(leftPicture.Image);
             if (selectedVal.Equals("0"))
             {
                 // if we are currently using EmguCV + Onnx
@@ -301,8 +322,11 @@ namespace EmguCV_TextDetection
                     Stopwatch stopwatch = new Stopwatch();
                     stopwatch.Start();
 
+                    if (detectTextToolStripMenuItem.Enabled)
+                    {
+                        await ProcessText_Onnx(bitmap, bitmap.Width);
+                    }
                     
-
                     stopwatch.Stop();
                     // This obtains the current application process
                     Process thisProcess = Process.GetCurrentProcess();
@@ -315,8 +339,11 @@ namespace EmguCV_TextDetection
                     Stopwatch stopwatch = new Stopwatch();
                     stopwatch.Start();
 
-
-
+                    if (extractTextToolStripMenuItem.Enabled)
+                    {
+                        await ProcessText_Onnx(bitmap, bitmap.Width, extractText: true);
+                    }
+                    
                     stopwatch.Stop();
                     // This obtains the current application process
                     Process thisProcess = Process.GetCurrentProcess();
@@ -329,7 +356,10 @@ namespace EmguCV_TextDetection
                     Stopwatch stopwatch = new Stopwatch();
                     stopwatch.Start();
 
-
+                    if (translateTextToolStripMenuItem.Enabled)
+                    {
+                        await ProcessText_Onnx(bitmap, bitmap.Width, translateText: true);
+                    }
 
                     stopwatch.Stop();
                     // This obtains the current application process
@@ -347,13 +377,12 @@ namespace EmguCV_TextDetection
                     // detect the text when press F8
                     if (detectTextToolStripMenuItem.Enabled)
                     {
-                        Bitmap bm = (Bitmap)(leftPicture.Image);
                         if (selectedVal.Equals("1"))
                         {
                             Stopwatch stopwatch = new Stopwatch();
                             stopwatch.Start();
 
-                            await DetectTextIronOCR_Async(bm);
+                            await DetectTextIronOCR_Async(bitmap);
 
                             stopwatch.Stop();
                             // This obtains the current application process
@@ -367,7 +396,7 @@ namespace EmguCV_TextDetection
                             Stopwatch stopwatch = new Stopwatch();
                             stopwatch.Start();
                             
-                            await DetectText_Async(bm.ToImage<Bgr, byte>());
+                            await DetectText_Async(bitmap.ToImage<Bgr, byte>());
                             
                             stopwatch.Stop();
                             // This obtains the current application process
@@ -383,7 +412,6 @@ namespace EmguCV_TextDetection
                     // extract the text when press F9
                     if (extractTextToolStripMenuItem.Enabled)
                     {
-                        Bitmap bitmap = (Bitmap)(leftPicture.Image);
                         if (selectedVal.Equals("1"))
                         {
                             Stopwatch stopwatch = new Stopwatch();
@@ -420,7 +448,6 @@ namespace EmguCV_TextDetection
                     // translate the text when press F10
                     if (translateTextToolStripMenuItem.Enabled)
                     {
-                        Bitmap bitmap = (Bitmap)(leftPicture.Image);
                         if (selectedVal.Equals("1"))
                         {
                             Stopwatch stopwatch = new Stopwatch();
@@ -635,6 +662,61 @@ namespace EmguCV_TextDetection
             }
         }
 
+        /**
+         * Helper Method to load ONNX model
+         */
+        private void loadOnnxModel(
+            string detName = "dbnet.onnx",
+            string clsName = "angle_net.onnx",
+            string recName = "crnn_lite_lstm.onnx",
+            string keysName = "keys.txt",
+            int numThread = 4
+            )
+        {
+
+            string appPath = AppDomain.CurrentDomain.BaseDirectory;
+            string modelsDir = appPath + "models";
+            // modelsTextBox.Text = modelsDir;
+            string detPath = modelsDir + "\\" + detName;
+            string clsPath = modelsDir + "\\" + clsName;
+            string recPath = modelsDir + "\\" + recName;
+            string keysPath = modelsDir + "\\" + keysName;
+            bool isDetExists = File.Exists(detPath);
+            if (!isDetExists)
+            {
+                MessageBox.Show("Model file not found at: " + detPath);
+            }
+            bool isClsExists = File.Exists(clsPath);
+            if (!isClsExists)
+            {
+                MessageBox.Show("Model file not found at: " + clsPath);
+            }
+            bool isRecExists = File.Exists(recPath);
+            if (!isRecExists)
+            {
+                MessageBox.Show("Model file not found at: " + recPath);
+            }
+            bool isKeysExists = File.Exists(keysPath);
+            if (!isKeysExists)
+            {
+                MessageBox.Show("Keys file not found at: " + keysPath);
+            }
+            if (isDetExists && isClsExists && isRecExists && isKeysExists)
+            {
+                if (ocrEngin != null)
+                {
+                    ocrEngin = null;
+                    System.GC.Collect();
+                }
+                ocrEngin = new OcrLite();
+                ocrEngin.InitModels(detPath, clsPath, recPath, keysPath, (int)numThread);
+            }
+            else
+            {
+                MessageBox.Show("Initialization failed, please confirm the model folder and file, and then reinitialize!");
+            }
+            System.GC.Collect();
+        }
         #endregion
 
         #region "Detecting Text"
@@ -695,6 +777,7 @@ namespace EmguCV_TextDetection
         #region "Extracting Text"
         /**
          * Detect text in the image and draw Bounding Rectangles around it.
+         * Using IronOCR to get bounding rectangles + EmguCV for extracting text
          */
         private async Task ExtractText(Image<Bgr, byte> img)
         {
@@ -756,8 +839,10 @@ namespace EmguCV_TextDetection
             rightPicture.Image = img.ToBitmap();
         }
 
-        
-
+        /**
+         * Detect text in the image and draw Bounding Rectangles around it.
+         * Using IronOCR to get both bounding rectangles and extracting text
+         */
         private async Task ExtractText_IronOCR(Bitmap bitmap)
         {
             // Image<Bgr, byte> img = bitmap.ToImage<Bgr, byte>();
@@ -809,92 +894,44 @@ namespace EmguCV_TextDetection
                 // CvInvoke.Rectangle(img, brect, new MCvScalar(50, 50, 50), -1);
             }
         }
-
         #endregion
 
         #region "Translating Text"
         /**
-         * Detect text in the image and draw Bounding Rectangles around it.
-         */
+            * Detect text in the image and draw Bounding Rectangles around it.
+            */
         private async Task TranslateText(Image<Bgr, byte> img)
+    {
+        List<Rectangle> currentRectList = await Task.Run(() => GetBoudingRectangles(img));
+
+        Font font = new Font("Tahoma", 18, GraphicsUnit.Point);
+
+        foreach (var rect in currentRectList)
         {
-            List<Rectangle> currentRectList = await Task.Run(() => GetBoudingRectangles(img));
-
-            Font font = new Font("Tahoma", 18, GraphicsUnit.Point);
-
-            foreach (var rect in currentRectList)
+            // check if the area contains text in the rectangle
+            using (var Input = new OcrInput())
             {
-                // check if the area contains text in the rectangle
-                using (var Input = new OcrInput())
-                {
-                    Input.AddImage(leftPicture.Image, rect);
-                    // use the default value (https://ironsoftware.com/csharp/ocr/troubleshooting/x-and-y-coordinates-change/)
-                    // Input.MinimumDPI = null;
-                    Input.ToGrayScale();
-
-                    var Result = await Task.Run(() => Ocr.Read(Input));
-
-                    // process the line of text
-                    if (Result.Lines.Length > 0)
-                    {
-                        var Line = Result.Lines[0];
-                        string LineText = Line.Text;
-                        ///**
-                        int LineX_location = Line.X;
-                        int LineY_location = Line.Y;
-                        int LineWidth = Line.Width;
-                        int LineHeight = Line.Height;
-
-                        Boolean containsText = !string.IsNullOrEmpty(LineText);
-                        if (containsText)
-                        {
-                            // draw the text
-                            using (Graphics g = Graphics.FromImage(img.AsBitmap()))
-                            {
-                                int alpha = 255; // from 0-255, 128 is 50% opacity
-                                int red = 220, green = 220, blue = 220;
-                                using (Brush brush = new SolidBrush(Color.FromArgb(alpha, red, green, blue)))
-                                {
-                                    var translatedText = await Task.Run(() => Translate(LineText).Result);
-                                    drawTranslatedText(g, brush, font, translatedText, rect);
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-            rightPicture.Image = null; // delete the old image
-            System.GC.Collect();
-            rightPicture.Image = img.ToBitmap();
-        }
-
-
-
-        private async Task TranslateText_IronOCR(Bitmap bitmap)
-        {
-            using (var Input = new OcrInput(bitmap))
-            {
-                Input.TargetDPI = 300;
+                Input.AddImage(leftPicture.Image, rect);
+                // use the default value (https://ironsoftware.com/csharp/ocr/troubleshooting/x-and-y-coordinates-change/)
+                // Input.MinimumDPI = null;
+                Input.ToGrayScale();
 
                 var Result = await Task.Run(() => Ocr.Read(Input));
-                Image<Bgr, byte> img = Result.Pages[0].ContentAreaToBitmap(Input).ToImage<Bgr, byte>();
-                Font font = new Font("Tahoma", 24, GraphicsUnit.Point);
 
-                foreach (var Line in Result.Lines)
+                // process the line of text
+                if (Result.Lines.Length > 0)
                 {
-                    // only draw if the confidence is higher than 0%
-                    if (Line.Confidence > 0 && !string.IsNullOrEmpty(Line.Text))
+                    var Line = Result.Lines[0];
+                    string LineText = Line.Text;
+                    ///**
+                    int LineX_location = Line.X;
+                    int LineY_location = Line.Y;
+                    int LineWidth = Line.Width;
+                    int LineHeight = Line.Height;
+
+                    Boolean containsText = !string.IsNullOrEmpty(LineText);
+                    if (containsText)
                     {
-                        String LineText = Line.Text;
-                        int LineX_location = Line.X;
-                        int LineY_location = Line.Y;
-                        int LineWidth = Line.Width;
-                        int LineHeight = Line.Height;
-
-                        // draw the background
-                        Rectangle rect = new Rectangle(LineX_location, LineY_location, LineWidth, LineHeight);
-
                         // draw the text
                         using (Graphics g = Graphics.FromImage(img.AsBitmap()))
                         {
@@ -907,15 +944,93 @@ namespace EmguCV_TextDetection
                             }
                         }
                     }
-
                 }
-                
-                rightPicture.Image = null; // delete the old image
-                System.GC.Collect();
-                Bitmap resized = new Bitmap(img.ToBitmap(), leftPicture.Size);
-                rightPicture.Image = resized;
+
             }
         }
+        rightPicture.Image = null; // delete the old image
+        System.GC.Collect();
+        rightPicture.Image = img.ToBitmap();
+    }
+
+
+
+    private async Task TranslateText_IronOCR(Bitmap bitmap)
+    {
+        using (var Input = new OcrInput(bitmap))
+        {
+            Input.TargetDPI = 300;
+
+            var Result = await Task.Run(() => Ocr.Read(Input));
+            Image<Bgr, byte> img = Result.Pages[0].ContentAreaToBitmap(Input).ToImage<Bgr, byte>();
+            Font font = new Font("Tahoma", 24, GraphicsUnit.Point);
+
+            foreach (var Line in Result.Lines)
+            {
+                // only draw if the confidence is higher than 0%
+                if (Line.Confidence > 0 && !string.IsNullOrEmpty(Line.Text))
+                {
+                    String LineText = Line.Text;
+                    int LineX_location = Line.X;
+                    int LineY_location = Line.Y;
+                    int LineWidth = Line.Width;
+                    int LineHeight = Line.Height;
+
+                    // draw the background
+                    Rectangle rect = new Rectangle(LineX_location, LineY_location, LineWidth, LineHeight);
+
+                    // draw the text
+                    using (Graphics g = Graphics.FromImage(img.AsBitmap()))
+                    {
+                        int alpha = 255; // from 0-255, 128 is 50% opacity
+                        int red = 220, green = 220, blue = 220;
+                        using (Brush brush = new SolidBrush(Color.FromArgb(alpha, red, green, blue)))
+                        {
+                            var translatedText = await Task.Run(() => Translate(LineText).Result);
+                            drawTranslatedText(g, brush, font, translatedText, rect);
+                        }
+                    }
+                }
+
+            }
+                
+            rightPicture.Image = null; // delete the old image
+            System.GC.Collect();
+            Bitmap resized = new Bitmap(img.ToBitmap(), leftPicture.Size);
+            rightPicture.Image = resized;
+        }
+    }
         #endregion
+
+        /**
+         * Detect text in the image and draw Bounding Rectangles around it.
+         * Using IronOCR to get both bounding rectangles and Onnx model for extracting text
+         */
+        private async Task ProcessText_Onnx(
+            Bitmap bitmap,
+            int imgResize,
+            int padding = 50,
+            float boxScoreThresh = 0.618f,
+            float boxThresh = 0.300f,
+            float unClipRatio = 2.0f,
+            bool doAngle = true,
+            bool mostAngle = true,
+            bool extractText = false,
+            bool translateText = false
+            )
+        {
+            if (ocrEngin == null)
+            {
+                MessageBox.Show("OCR Engine is uninitialized, cannot execute!");
+                return;
+            }
+            Image<Bgr, byte> imageCV = bitmap.ToImage<Bgr, byte>(); //Image Class from Emgu.CV
+            Mat mat = imageCV.Mat;
+
+            OcrLiteLib.OcrResult ocrResult = await Task.Run(() => ocrEngin.Detect(
+                mat, padding, imgResize, boxScoreThresh, boxThresh, unClipRatio,
+                doAngle, mostAngle, extractText, translateText, translator));
+            rightPicture.Image = ocrResult.BoxImg.ToBitmap();
+        }
     }
 }
