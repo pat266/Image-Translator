@@ -113,6 +113,52 @@ namespace EmguCV_TextDetection
             
         }
 
+        #region "Delegate"
+        
+        /**
+         * A delegate function which accepts a Bitmap
+         */
+        private async Task Delegate_Bitmap(Func<Bitmap, Task> action)
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            
+            Bitmap bitmap = (Bitmap)(leftPicture.Image);
+            
+            await action(bitmap);
+            
+            stopwatch.Stop();
+            // This obtains the current application process
+            Process thisProcess = Process.GetCurrentProcess();
+            // This obtains the memory used by the process
+            long usedMemory = thisProcess.WorkingSet64;
+            CalculateStats(stopwatch, usedMemory);
+        }
+
+        /**
+         * A delegate function which accepts a Bitmap
+         */
+        private async Task Delegate_Image(Func<Image<Bgr, byte>, Task> action)
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            Bitmap bitmap = (Bitmap)(leftPicture.Image);
+            Image<Bgr, byte> image = bitmap.ToImage<Bgr, byte>();
+
+            await action(image);
+
+            stopwatch.Stop();
+            // This obtains the current application process
+            Process thisProcess = Process.GetCurrentProcess();
+            // This obtains the memory used by the process
+            long usedMemory = thisProcess.WorkingSet64;
+            CalculateStats(stopwatch, usedMemory);
+        }
+
+
+        #endregion
+
         #region "Click events"
         private void openImageToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -379,31 +425,11 @@ namespace EmguCV_TextDetection
                     {
                         if (selectedVal.Equals("1"))
                         {
-                            Stopwatch stopwatch = new Stopwatch();
-                            stopwatch.Start();
-
-                            await DetectTextIronOCR_Async(bitmap);
-
-                            stopwatch.Stop();
-                            // This obtains the current application process
-                            Process thisProcess = Process.GetCurrentProcess();
-                            // This obtains the memory used by the process
-                            long usedMemory = thisProcess.WorkingSet64;
-                            CalculateStats(stopwatch, usedMemory);
+                            await Delegate_Bitmap(DetectTextIronOCR_Async);
                         }
                         else if (selectedVal.Equals("2"))
                         {
-                            Stopwatch stopwatch = new Stopwatch();
-                            stopwatch.Start();
-                            
-                            await DetectText_Async(bitmap.ToImage<Bgr, byte>());
-                            
-                            stopwatch.Stop();
-                            // This obtains the current application process
-                            Process thisProcess = Process.GetCurrentProcess();
-                            // This obtains the memory used by the process
-                            long usedMemory = thisProcess.WorkingSet64;
-                            CalculateStats(stopwatch, usedMemory);
+                            await Delegate_Image(DetectText_Async);
                         }
                     }
                 }
@@ -414,32 +440,11 @@ namespace EmguCV_TextDetection
                     {
                         if (selectedVal.Equals("1"))
                         {
-                            Stopwatch stopwatch = new Stopwatch();
-                            stopwatch.Start();
-
-                            await ExtractText_IronOCR(bitmap);
-
-                            stopwatch.Stop();
-                            // This obtains the current application process
-                            Process thisProcess = Process.GetCurrentProcess();
-                            // This obtains the memory used by the process
-                            long usedMemory = thisProcess.WorkingSet64;
-                            CalculateStats(stopwatch, usedMemory);
-                            
+                            await Delegate_Bitmap(ExtractText_IronOCR);
                         }
                         else if (selectedVal.Equals("2"))
                         {
-                            Stopwatch stopwatch = new Stopwatch();
-                            stopwatch.Start();
-
-                            await ExtractText(bitmap.ToImage<Bgr, byte>());
-
-                            stopwatch.Stop();
-                            // This obtains the current application process
-                            Process thisProcess = Process.GetCurrentProcess();
-                            // This obtains the memory used by the process
-                            long usedMemory = thisProcess.WorkingSet64;
-                            CalculateStats(stopwatch, usedMemory);
+                            await Delegate_Image(ExtractText);
                         }
                     }
                 }
@@ -450,32 +455,11 @@ namespace EmguCV_TextDetection
                     {
                         if (selectedVal.Equals("1"))
                         {
-                            Stopwatch stopwatch = new Stopwatch();
-                            stopwatch.Start();
-
-                            await TranslateText_IronOCR(bitmap);
-
-                            stopwatch.Stop();
-                            // This obtains the current application process
-                            Process thisProcess = Process.GetCurrentProcess();
-                            // This obtains the memory used by the process
-                            long usedMemory = thisProcess.WorkingSet64;
-                            CalculateStats(stopwatch, usedMemory);
-
+                            await Delegate_Bitmap(TranslateText_IronOCR);
                         }
                         else if (selectedVal.Equals("2"))
                         {
-                            Stopwatch stopwatch = new Stopwatch();
-                            stopwatch.Start();
-
-                            await TranslateText(bitmap.ToImage<Bgr, byte>());
-
-                            stopwatch.Stop();
-                            // This obtains the current application process
-                            Process thisProcess = Process.GetCurrentProcess();
-                            // This obtains the memory used by the process
-                            long usedMemory = thisProcess.WorkingSet64;
-                            CalculateStats(stopwatch, usedMemory);
+                            await Delegate_Image(TranslateText);
                         }
                     }
                 }
@@ -1031,6 +1015,7 @@ namespace EmguCV_TextDetection
                 mat, padding, imgResize, boxScoreThresh, boxThresh, unClipRatio,
                 doAngle, mostAngle, extractText, translateText, translator));
             rightPicture.Image = ocrResult.BoxImg.ToBitmap();
+            
         }
     }
 }

@@ -232,7 +232,7 @@ namespace OcrLiteLib
                 g.TranslateTransform(rect.Left, rect.Top);
 
                 // make the font smaller until it fits nicely
-                while ((float)(rect.Width / textSize.Width) < 0.45)
+                while ((float)(rect.Width / textSize.Width) < 0.5)
                 {
                     font = new Font(font.FontFamily, font.Size - 1, font.Style);
                     textSize = g.MeasureString(translatedText, font);
