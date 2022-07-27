@@ -114,9 +114,12 @@ namespace EmguCV_TextDetection
         }
 
         #region "Delegate"
-        
+
         /**
          * A delegate function which accepts a Bitmap
+         * Use Func when you want to use a delegate function with a return value
+         * Use Action when you want to use a delegate function without a return value (void)
+         * Example: https://stackoverflow.com/questions/2082615/pass-method-as-parameter-using-c-sharp
          */
         private async Task Delegate_Bitmap(Func<Bitmap, Task> action)
         {
@@ -137,6 +140,9 @@ namespace EmguCV_TextDetection
 
         /**
          * A delegate function which accepts a Bitmap
+         * Use Func when you want to use a delegate function with a return value
+         * Use Action when you want to use a delegate function without a return value (void)
+         * Example: https://stackoverflow.com/questions/2082615/pass-method-as-parameter-using-c-sharp
          */
         private async Task Delegate_Image(Func<Image<Bgr, byte>, Task> action)
         {
