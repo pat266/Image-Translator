@@ -52,32 +52,32 @@ Debug\models\
 
 ### Text Detection
 #### IronOCR Only
-![](./testImg/result/IronOCR/TextDetection.PNG)
+![](./testImg/result/IronOCR/TextDetection.png)
 
 #### EmguCV + IronOCR
-![](./testImg/result/EmguCV_IronOCR/TextDetection.PNG)
+![](./testImg/result/EmguCV_IronOCR/TextDetection.png)
 
 #### EmguCV + Onnx
-![](./testImg/result/EmguCV_Onnx/TextDetection.PNG)
+![](./testImg/result/EmguCV_Onnx/TextDetection.png)
 
 
 ### Text Extraction
 #### IronOCR Only
-![](./testImg/result/IronOCR/TextExtraction.PNG)
+![](./testImg/result/IronOCR/TextExtraction.png)
 
 #### EmguCV + IronOCR
-![](./testImg/result/EmguCV_IronOCR/TextExtraction.PNG)
+![](./testImg/result/EmguCV_IronOCR/TextExtraction.png)
 
 #### EmguCV + Onnx
-![](./testImg/result/EmguCV_Onnx/TextExtraction.PNG)
+![](./testImg/result/EmguCV_Onnx/TextExtraction.png)
 
 
 ### Text Translation
 #### IronOCR Only
-![](./testImg/result/IronOCR/TextTranslation.PNG)
+![](./testImg/result/IronOCR/TextTranslation.png)
 
 #### EmguCV + IronOCR
-![](./testImg/result/EmguCV_IronOCR/TextTranslation.PNG)
+![](./testImg/result/EmguCV_IronOCR/TextTranslation.png)
 
 #### EmguCV + Onnx
-![](./testImg/result/EmguCV_Onnx/TextTranslation.PNG)
+![](./testImg/result/EmguCV_Onnx/TextTranslation.png)
