@@ -149,8 +149,7 @@ namespace OcrLiteLib
             }
         }
 
-        public async static Task<Mat> WriteTextInBoxes(Mat src, List<TextBlock> textBlocks,
-            bool translateText, AggregateTranslator translator)
+        public static Mat WriteTextInBoxes(Mat src, List<TextBlock> textBlocks, bool translateText)
         {
             // List<TextBlock> textblocks = result.TextBlocks;
             // OcrUtils.DrawTextBoxes(textBoxPaddingImg, textBoxes, thickness);
@@ -158,14 +157,14 @@ namespace OcrLiteLib
             foreach (var block in textBlocks)
             {
                 // paint the background of the rectangle
-                src = await Task.Run(() => WriteTextInBox(src, block.BoxPoints, block.Text,
-                    translateText, translator).Result);
+                src = WriteTextInBox(src, block.BoxPoints, block.Text,
+                    block.TranslatedText, translateText);
             }
             return src;
         }
 
-        public static async Task<Mat> WriteTextInBox(Mat src, List<Point> box, string text,
-            bool translateText, AggregateTranslator translator)
+        public static Mat WriteTextInBox(Mat src, List<Point> box, string text,
+            string translatedText, bool translateText)
         {
             // declare the font to write
             Font font = new Font("Tahoma", 24, GraphicsUnit.Point);
@@ -195,15 +194,15 @@ namespace OcrLiteLib
                 int red = 220, green = 220, blue = 220;
                 using (Brush brush = new SolidBrush(Color.FromArgb(alpha, red, green, blue)))
                 {
-                    if (translateText && translator != null)
+                    if (translateText && translatedText != string.Empty)
                     {
-                        var result = await translator.TranslateAsync(text, "en");
-                        text = result.Translation;
+                        drawTranslatedText(g, brush, font, translatedText, rectangle);
                     }
-                    drawTranslatedText(g, brush, font, text, rectangle);
+                    else
+                    {
+                        drawTranslatedText(g, brush, font, text, rectangle);
+                    }
                 }
-
-                // g.DrawString(text, new Font("Times New Roman", 9), Brushes.Black, rectangle);
             }
             return srcImg.Mat;
         }
@@ -234,6 +233,12 @@ namespace OcrLiteLib
                 // make the font smaller until it fits nicely
                 while ((float)(rect.Width / textSize.Width) < 0.5)
                 {
+                    if (font.Size < 3)
+                    {
+                        font = new Font(font.FontFamily, 3, font.Style);
+                        textSize = g.MeasureString(translatedText, font);
+                        break;
+                    }
                     font = new Font(font.FontFamily, font.Size - 1, font.Style);
                     textSize = g.MeasureString(translatedText, font);
                 }

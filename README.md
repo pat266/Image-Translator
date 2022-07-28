@@ -10,6 +10,9 @@ This project is a proof-of-concept project for the on-screen translation for my 
 * The translator has a delay
     * 5-8 seconds in the images below
     * varied depending on the number of text instances to translate
+* The EmguCV + Onnx process has a batch translation system
+    * reduced time from 9 seconds to 2 seconds for the example below
+    * Basically, instead of translating one-by-one, we combine them all together (limit by certain number of characters due to GT limitation), then separate them after translation
 
 
 <br>
@@ -81,3 +84,6 @@ Debug\models\
 
 #### EmguCV + Onnx
 ![](./testImg/result/EmguCV_Onnx/TextTranslation.png)
+
+#### EmguCV + Onnx (Batch Translation)
+![](./testImg/result/EmguCV_Onnx/BatchTextTranslation.png)
